@@ -1,0 +1,55 @@
+name: Build and Release headless VST3 Plugin
+
+on:
+  push:
+    tags:
+      - "v*" # Triggers only when a tag like "v1.0.0" is pushed
+
+  workflow_dispatch: # Allow manual triggering from GitHub Actions UI
+
+permissions:
+  contents: write
+
+jobs:
+  build-plugin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Pull Prebuilt Docker Image
+        run: docker pull ghcr.io/tonalflex/elk-audio-os-builder:latest
+
+      - name: Run Plugin Build Inside Container
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/plugin:/home/yoctouser/plugin \
+            -v ${{ github.workspace }}/script:/home/yoctouser/script \
+            -v ${{ github.workspace }}/bin:/home/yoctouser/bin \
+            --user root \
+            ghcr.io/tonalflex/elk-audio-os-builder:latest \
+            /home/yoctouser/script/build-arm64-headless.sh
+
+      - name: Check if plugin file exists
+        run: |
+          if [ ! -f bin/plugin-arm64-headless.tar.gz ]; then
+            echo "❌ ERROR: Plugin file not found!" >&2
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          files: bin/plugin-arm64-headless.tar.gz

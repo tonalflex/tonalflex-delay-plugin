@@ -1,0 +1,8 @@
+.sushi/
+.vscode/
+libs/
+bin/
+build/
+output/
+.DS_Store
+plugin/webview/*

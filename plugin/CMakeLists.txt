@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.22.1)
 
 # Required by JUCE (Change these to project specs)
-set(PLUGIN_NAME "Plugin")            # Name of the plugin (used in the UI)
-set(PLUGIN_CODE TFTP)                # Unique 4-letter code for the plugin
-project(plugin VERSION 0.0.1)        # Set version of the plugin
+set(PLUGIN_NAME "Tonalflex Delay")    # Name of the plugin (used in the UI)
+set(PLUGIN_CODE TFDP)                # Unique 4-letter code for the plugin
+project(delay VERSION 0.0.1)         # Set version of the plugin
 
 option(HEADLESS "Disable GUI (headless/embedded build)" ON)
 set(_plugin_formats "VST3") # Default plugin format

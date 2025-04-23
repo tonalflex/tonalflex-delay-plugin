@@ -32,7 +32,7 @@ AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
 }
 
 const juce::String AudioPluginAudioProcessor::getName() const {
-  return "Plugin";  // Replace with plugin name
+  return "Tonalflex Delay";
 }
 
 bool AudioPluginAudioProcessor::acceptsMidi() const {

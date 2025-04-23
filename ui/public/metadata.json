@@ -1,8 +1,8 @@
 {
-    "name": "Plugin",
-    "path": "plugin.vst3",
+    "name": "Delay",
+    "path": "delay.vst3",
     "system-plugin": "false",
-    "description": "TonalFlex Template Plugin provides a starting point for creating Audio DSP Plugins using JUCE framework.",
+    "description": "TonalFlex Delay Plugin",
     "parameters": {
         "roomSize": "Room Size",
         "damping": "Damping",

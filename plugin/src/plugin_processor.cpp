@@ -131,11 +131,13 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   auto* left = buffer.getWritePointer(0);
   auto* right = buffer.getNumChannels() > 1 ? buffer.getWritePointer(1) : nullptr;
 
-  if (buffer.getNumChannels() == 1 || right == nullptr) {
-    delay.processMono(left, buffer.getNumSamples());
-  } else {
-    delay.processStereo(left, right, buffer.getNumSamples());
-  }
+  delay.processStereo(left, right, buffer.getNumSamples());
+
+  // if (buffer.getNumChannels() == 1 || right == nullptr) {
+  //   delay.processMono(left, buffer.getNumSamples());
+  // } else {
+  //   delay.processStereo(left, right, buffer.getNumSamples());
+  // }
 }
 
 bool AudioPluginAudioProcessor::hasEditor() const {

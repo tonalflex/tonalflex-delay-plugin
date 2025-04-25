@@ -1,8 +1,8 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include <juce_dsp/juce_dsp.h>
 #include <juce_gui_basics/juce_gui_basics.h>
+#include "delay.h"
 
 namespace audio_plugin {
 class AudioPluginAudioProcessor : public juce::AudioProcessor {
@@ -37,15 +37,14 @@ public:
   void getStateInformation(juce::MemoryBlock& destData) override;
   void setStateInformation(const void* data, int sizeInBytes) override;
 
-  // Reverb Controllable Parameters
+  // Controllable Parameters
   juce::AudioProcessorValueTreeState parameters;
 
   // Getters
   juce::AudioProcessorValueTreeState& getParameters() { return parameters; }
 
 private:
-  juce::Reverb reverb;
-  juce::Reverb::Parameters reverbParams;
+  StereoDelay delay;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

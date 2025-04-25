@@ -23,7 +23,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         params.push_back(
             std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.0f, 0.99f, 0.2f));
         params.push_back(std::make_unique<AudioParameterFloat>("wet", "Wet", 0.0f, 1.0f, 0.10f));
-        params.push_back(std::make_unique<AudioParameterFloat>("dry", "Dry", 0.0f, 1.0f, 0.5f));
+        params.push_back(std::make_unique<AudioParameterFloat>("dry", "Dry", 0.0f, 1.0f, 1.0f));
         params.push_back(
             std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.5f, 0.2f));
         params.push_back(

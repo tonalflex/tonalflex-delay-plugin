@@ -109,7 +109,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   juce::ignoreUnused(midiMessages);
   juce::ScopedNoDenormals noDenormals;
 
-  StereoDelay::Parameters p;
+  Delay::Parameters p;
   p.delayTimeSeconds = *parameters.getRawParameterValue("delayTime");
   p.feedback = *parameters.getRawParameterValue("feedback");
   p.wetLevel = *parameters.getRawParameterValue("wet");
@@ -123,21 +123,25 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   p.noteDivision = noteDurations[divisionIndex];
 
   p.hostBpm = getPlayHead()->getPosition()->getBpm().orFallback(120.0);
-  p.mode = static_cast<StereoDelay::DelayMode>(
-      static_cast<int>(*parameters.getRawParameterValue("mode")));
+  p.mode =
+      static_cast<Delay::DelayMode>(static_cast<int>(*parameters.getRawParameterValue("mode")));
 
   delay.setParameters(p);
 
   auto* left = buffer.getWritePointer(0);
   auto* right = buffer.getNumChannels() > 1 ? buffer.getWritePointer(1) : nullptr;
 
-  delay.processStereo(left, right, buffer.getNumSamples());
-
-  // if (buffer.getNumChannels() == 1 || right == nullptr) {
-  //   delay.processMono(left, buffer.getNumSamples());
-  // } else {
-  //   delay.processStereo(left, right, buffer.getNumSamples());
-  // }
+  if ((buffer.getNumChannels() == 1 || right == nullptr) && getTotalNumOutputChannels() == 1) {
+    // Mono to Mono
+    delay.processMono(left, buffer.getNumSamples());
+  } else if (buffer.getNumChannels() == 1 && getTotalNumOutputChannels() == 2) {
+    // Mono to Stereo
+    std::fill(right, right + buffer.getNumSamples(), 0.0f);  // clear to avoid doubling
+    delay.processStereo(left, right, buffer.getNumSamples());
+  } else {
+    // Stereo to Stereo
+    delay.processStereo(left, right, buffer.getNumSamples());
+  }
 }
 
 bool AudioPluginAudioProcessor::hasEditor() const {

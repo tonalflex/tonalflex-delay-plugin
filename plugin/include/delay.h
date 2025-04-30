@@ -4,7 +4,7 @@
 #include <cmath>
 #include <juce_audio_processors/juce_audio_processors.h>
 
-class StereoDelay {
+class Delay {
 public:
   enum class DelayMode { Mono, Stereo, PingPong };
 
@@ -24,7 +24,7 @@ public:
     DelayMode mode = DelayMode::Stereo;
   };
 
-  StereoDelay() : sampleRate(44100.0), maxDelayTime(2.0), writeIndex(0), modPhase(0.0f) {
+  Delay() : sampleRate(44100.0), maxDelayTime(2.0), writeIndex(0), modPhase(0.0f) {
     setSampleRate(sampleRate);
   }
 
@@ -40,26 +40,35 @@ public:
     feedback = std::clamp(params.feedback, 0.0f, 0.99f);
     wetLevel = params.wetLevel;
     dryLevel = params.dryLevel;
-    modulationDepth = params.modulationDepthSeconds;
-    modulationRate = params.modulationRateHz;
+    modDepth = params.modulationDepthSeconds;
+    modRate = params.modulationRateHz;
     mode = params.mode;
 
     // Tempo sync
     if (params.syncToTempo)
-      delayTimeSeconds = (60.0f / params.hostBpm) * (1.0f / params.noteDivision);
+      delayTimeSeconds = (60.0f / params.hostBpm) * params.noteDivision;
     else
       delayTimeSeconds = params.delayTimeSeconds;
+
+    // Calculate number of samples in one repeat on delay time change
+    if (std::abs(delayTimeSeconds - params.delayTimeSeconds) > 0.0001f) {
+      delayTimeSeconds = params.delayTimeSeconds;
+      samplesUntilNextFlip = static_cast<size_t>(delayTimeSeconds * sampleRate);
+    } else {
+      delayTimeSeconds = params.delayTimeSeconds;
+    }
   }
 
+  // Mono Output
   void processMono(float* samples, int numSamples) {
     auto& buf = delayBuffer[0];
 
     for (int i = 0; i < numSamples; ++i) {
-      float mod = std::sin(modPhase * juce::MathConstants<float>::twoPi) * (modulationDepth / 100);
+      float mod = std::sin(modPhase * juce::MathConstants<float>::twoPi) * (modDepth / 100);
 
       size_t delaySamples = static_cast<size_t>((delayTimeSeconds + mod) * sampleRate);
-
       size_t readIndex = (writeIndex + buf.size() - delaySamples) % buf.size();
+
       float delayed = buf[readIndex];
       float input = samples[i];
       float wet = delayed;
@@ -69,46 +78,54 @@ public:
       buf[writeIndex] = input + delayed * feedback;
 
       writeIndex = (writeIndex + 1) % buf.size();
-      modPhase = std::fmod(modPhase + modulationRate / sampleRate, 1.0f);
+      modPhase = std::fmod(modPhase + modRate / sampleRate, 1.0f);
     }
   }
 
+  // Stereo Output
   void processStereo(float* left, float* right, int numSamples) {
-    static bool pingPongFlip = false;
-    static size_t pingPongCounter = 0;
+    auto& bufL = delayBuffer[0];
+    auto& bufR = delayBuffer[1];
+    const auto bufferSize = bufL.size();
 
     for (int i = 0; i < numSamples; ++i) {
-      float mod =
-          std::sin(modPhase * juce::MathConstants<float>::twoPi) * (modulationDepth / 100.0f);
+      float mod = std::sin(modPhase * juce::MathConstants<float>::twoPi) * (modDepth / 100.0f);
+
       size_t delaySamples = static_cast<size_t>((delayTimeSeconds + mod) * sampleRate);
+      delaySamples = std::max<size_t>(1, delaySamples);
+      if (delaySamples >= bufferSize)
+        continue;
 
-      auto& bufL = delayBuffer[0];
-      auto& bufR = delayBuffer[1];
+      size_t readIndex = (writeIndex + bufferSize - delaySamples) % bufferSize;
 
-      size_t readIndex = (writeIndex + bufL.size() - delaySamples) % bufL.size();
-
+      float inL = left[i];
+      float inR = right[i];
       float delayedL = bufL[readIndex];
       float delayedR = bufR[readIndex];
 
       if (mode == DelayMode::PingPong) {
-        float input = 0.5f * (left[i] + right[i]);
+        // Ping-pong delay - alternates between R/L channels
+        left[i] = dryLevel * inL + wetLevel * delayedL;
+        right[i] = dryLevel * inR + wetLevel * delayedR;
 
-        left[i] = dryLevel * input + wetLevel * (pingPongFlip ? delayedR : delayedL);
-        right[i] = dryLevel * input + wetLevel * (pingPongFlip ? delayedL : delayedR);
+        bufL[writeIndex] = inL;   // Inject input to start the ping-pong chain
+        bufR[writeIndex] = 0.0f;  // Clear the second channel
 
-        bufL[writeIndex] = input;
-        bufR[writeIndex] = input;
-
-        // cross-feeding
+        // Cross-feed feedback
         if (pingPongFlip) {
-          bufL[writeIndex] += delayedR * feedback;
-        } else {
           bufR[writeIndex] += delayedL * feedback;
+        } else {
+          bufL[writeIndex] += delayedR * feedback;
         }
-      } else {
-        float inL = left[i];
-        float inR = right[i];
 
+        // Flip once per full repeat/delay time
+        if (--samplesUntilNextFlip <= 0) {
+          pingPongFlip = !pingPongFlip;
+          samplesUntilNextFlip = delaySamples;
+        }
+
+      } else {
+        // Normal stereo delay
         left[i] = dryLevel * inL + wetLevel * delayedL;
         right[i] = dryLevel * inR + wetLevel * delayedR;
 
@@ -116,17 +133,8 @@ public:
         bufR[writeIndex] = inR + delayedR * feedback;
       }
 
-      writeIndex = (writeIndex + 1) % bufL.size();
-      modPhase = std::fmod(modPhase + modulationRate / sampleRate, 1.0f);
-
-      // Increment pingpong counter every sample
-      pingPongCounter++;
-
-      // Flip after a delay cycle (not whole buffer!)
-      if (pingPongCounter >= delaySamples) {
-        pingPongFlip = !pingPongFlip;
-        pingPongCounter = 0;
-      }
+      writeIndex = (writeIndex + 1) % bufferSize;
+      modPhase = std::fmod(modPhase + modRate / sampleRate, 1.0f);
     }
   }
 
@@ -139,8 +147,11 @@ private:
   float wetLevel;
   float dryLevel;
 
-  float modulationDepth;
-  float modulationRate;
+  bool pingPongFlip = false;
+  size_t samplesUntilNextFlip = 1;
+
+  float modDepth;
+  float modRate;
   float modPhase;
 
   DelayMode mode;

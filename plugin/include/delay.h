@@ -24,7 +24,7 @@ public:
     DelayMode mode = DelayMode::Stereo;
   };
 
-  Delay() : sampleRate(44100.0), maxDelayTime(2.0), writeIndex(0), modPhase(0.0f) {
+  Delay() : sampleRate(44100.0), maxDelayTime(2.0), modPhase(0.0f), writeIndex(0) {
     setSampleRate(sampleRate);
   }
 
@@ -34,6 +34,10 @@ public:
 
     for (auto& buf : delayBuffer)
       buf.assign(bufferSize, 0.0f);
+
+    // Set the fade-in increment based on the sample rate
+    fadeInIncrement = 1.0f / (sampleRate * 0.02f);  // 20ms fade-in for smooth attack
+    fadeInAmount = 0.0f;                            // reset on sample rate change
   }
 
   void setParameters(const Parameters& params) {
@@ -90,26 +94,38 @@ public:
 
     for (int i = 0; i < numSamples; ++i) {
       float mod = std::sin(modPhase * juce::MathConstants<float>::twoPi) * (modDepth / 100.0f);
+      float delaySamples = (delayTimeSeconds + mod) * sampleRate;
+      delaySamples =
+          std::clamp(delaySamples, 1.0f, static_cast<float>(bufferSize - 2));  // avoid overflow
 
-      size_t delaySamples = static_cast<size_t>((delayTimeSeconds + mod) * sampleRate);
-      delaySamples = std::max<size_t>(1, delaySamples);
-      if (delaySamples >= bufferSize)
-        continue;
+      // Calculate the fractional read index in order to interpolate
+      // between two samples in the delay buffer for smoother repeats...
+      float readPos = static_cast<float>(writeIndex) + bufferSize - delaySamples;
+      while (readPos < 0.0f)
+        readPos += bufferSize;
+      size_t i0 = static_cast<size_t>(readPos) % bufferSize;
+      size_t i1 = (i0 + 1) % bufferSize;
+      float frac = readPos - std::floor(readPos);
 
-      size_t readIndex = (writeIndex + bufferSize - delaySamples) % bufferSize;
+      // Linear interpolation
+      float delayedL = bufL[i0] * (1.0f - frac) + bufL[i1] * frac;
+      float delayedR = bufR[i0] * (1.0f - frac) + bufR[i1] * frac;
 
       float inL = left[i];
       float inR = right[i];
-      float delayedL = bufL[readIndex];
-      float delayedR = bufR[readIndex];
+
+      // Soften the attack of the delay using a fade-in
+      float fadeFactor = std::min(1.0f, fadeInAmount);
+      fadeInAmount += fadeInIncrement;
 
       if (mode == DelayMode::PingPong) {
         // Ping-pong delay - alternates between R/L channels
-        left[i] = dryLevel * inL + wetLevel * delayedL;
-        right[i] = dryLevel * inR + wetLevel * delayedR;
+        left[i] = dryLevel * inL + wetLevel * delayedL * fadeFactor;
+        right[i] = dryLevel * inR + wetLevel * delayedR * fadeFactor;
 
-        bufL[writeIndex] = inL;   // Inject input to start the ping-pong chain
-        bufR[writeIndex] = 0.0f;  // Clear the second channel
+        // Inject input from one channel to start the ping-pong chain
+        bufL[writeIndex] = inL * (1.0f - feedback);
+        bufR[writeIndex] = 0.0f;
 
         // Cross-feed feedback
         if (pingPongFlip) {
@@ -121,13 +137,14 @@ public:
         // Flip once per full repeat/delay time
         if (--samplesUntilNextFlip <= 0) {
           pingPongFlip = !pingPongFlip;
-          samplesUntilNextFlip = delaySamples;
+          // samplesUntilNextFlip = delaySamples;
+          samplesUntilNextFlip = static_cast<size_t>(delaySamples);
         }
 
       } else {
         // Normal stereo delay
-        left[i] = dryLevel * inL + wetLevel * delayedL;
-        right[i] = dryLevel * inR + wetLevel * delayedR;
+        left[i] = dryLevel * inL + wetLevel * delayedL * fadeFactor;
+        right[i] = dryLevel * inR + wetLevel * delayedR * fadeFactor;
 
         bufL[writeIndex] = inL + delayedL * feedback;
         bufR[writeIndex] = inR + delayedR * feedback;
@@ -153,6 +170,9 @@ private:
   float modDepth;
   float modRate;
   float modPhase;
+
+  float fadeInAmount = 0.0f;
+  float fadeInIncrement = 0.0f;
 
   DelayMode mode;
 

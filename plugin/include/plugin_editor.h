@@ -73,37 +73,37 @@ private:
   //==============================================================================
   // Native JUCE UI
   //==============================================================================
-  // Hi-cut filter
-  juce::Label hiCutFreqLabel;
-  juce::Slider hiCutFreqSlider;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hiCutFreqAttachment;
+  // // Hi-cut filter
+  // juce::Label hiCutFreqLabel;
+  // juce::Slider hiCutFreqSlider;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hiCutFreqAttachment;
 
-  // Delay parameters
-  juce::Label delayTimeLabel, feedbackLabel, wetLabel, dryLabel;
-  juce::Slider delayTimeSlider, feedbackSlider, wetSlider, drySlider;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment,
-      feedbackAttachment, wetAttachment, dryAttachment;
+  // // Delay parameters
+  // juce::Label delayTimeLabel, feedbackLabel, wetLabel, dryLabel;
+  // juce::Slider delayTimeSlider, feedbackSlider, wetSlider, drySlider;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> delayTimeAttachment,
+  //     feedbackAttachment, wetAttachment, dryAttachment;
 
-  // Trail modulation
-  juce::Label modDepthLabel, modRateLabel;
-  juce::Slider modDepthSlider, modRateSlider;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modDepthAttachment,
-      modRateAttachment;
+  // // Trail modulation
+  // juce::Label modDepthLabel, modRateLabel;
+  // juce::Slider modDepthSlider, modRateSlider;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modDepthAttachment,
+  //     modRateAttachment;
 
-  // Sync toggle
-  juce::ToggleButton syncToggle;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> syncAttachment;
+  // // Sync toggle
+  // juce::ToggleButton syncToggle;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> syncAttachment;
 
-  // Tempo sync division
-  // (1/1, 1/2, 1/4, 1/8, 1/8 Dotted, 1/16)
-  juce::Label divisionLabel;
-  juce::ComboBox divisionBox;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> divisionAttachment;
+  // // Tempo sync division
+  // // (1/1, 1/2, 1/4, 1/8, 1/8 Dotted, 1/16)
+  // juce::Label divisionLabel;
+  // juce::ComboBox divisionBox;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> divisionAttachment;
 
-  // Mode selector (Mono, Stereo, PingPong)
-  juce::Label modeLabel;
-  juce::ComboBox modeBox;
-  std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAttachment;
+  // // Mode selector (Mono, Stereo, PingPong)
+  // juce::Label modeLabel;
+  // juce::ComboBox modeBox;
+  // std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> modeAttachment;
 
   //==============================================================================
 

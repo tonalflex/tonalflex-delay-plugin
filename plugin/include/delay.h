@@ -48,18 +48,14 @@ public:
     modRate = params.modulationRateHz;
     mode = params.mode;
 
-    // Tempo sync
-    if (params.syncToTempo)
-      delayTimeSeconds = (60.0f / params.hostBpm) * params.noteDivision;
-    else
-      delayTimeSeconds = params.delayTimeSeconds;
+    // Set delay time based on tempo sync or manual time input
+    float newDelayTime = params.syncToTempo ? (60.0f / params.hostBpm) * params.noteDivision
+                                            : params.delayTimeSeconds;
 
-    // Calculate number of samples in one repeat on delay time change
-    if (std::abs(delayTimeSeconds - params.delayTimeSeconds) > 0.0001f) {
-      delayTimeSeconds = params.delayTimeSeconds;
+    if (std::abs(delayTimeSeconds - newDelayTime) > 0.0001f) {
+      delayTimeSeconds = newDelayTime;
+      // Calculate number of samples in one delay repeat
       samplesUntilNextFlip = static_cast<size_t>(delayTimeSeconds * sampleRate);
-    } else {
-      delayTimeSeconds = params.delayTimeSeconds;
     }
   }
 

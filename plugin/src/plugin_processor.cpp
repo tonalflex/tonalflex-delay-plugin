@@ -31,7 +31,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         params.push_back(std::make_unique<AudioParameterBool>("sync", "Tempo Sync", false));
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
             "division", "Note Division",
-            juce::StringArray{"1/1", "1/2", "1/4", "1/8", "1/8 Dotted", "1/16"}, 2));
+            juce::StringArray{"1/1", "1/2", "1/4", "1/8", "1/8 Dotted", "1/16"}, 0));
         params.push_back(std::make_unique<AudioParameterChoice>(
             "mode", "Delay Mode", StringArray{"Mono", "Stereo", "PingPong"}, 1));
 

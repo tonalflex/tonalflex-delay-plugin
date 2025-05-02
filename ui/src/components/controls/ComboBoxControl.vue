@@ -38,13 +38,16 @@ function onChange(e: Event) {
 /* Styled <select> */
 .combobox-select {
   width: 100%; /* Full width inside container */
-  padding: 8px;
+  padding: 6px;
   background: linear-gradient(to bottom, #444, #222);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
   color: white;
   border: 1px solid #333; /* thin dark border */
   border-radius: 0px; /* NO rounded corners */
-  font-size: 0.8rem;
+  font-size: 1.25rem;
+  font-family: "Digital", monospace;
+  text-align: center;
+  text-align-last: center;
   appearance: none; /* Hide native select arrow in some browsers */
   -webkit-appearance: none;
   -moz-appearance: none;

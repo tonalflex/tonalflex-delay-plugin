@@ -113,7 +113,7 @@ function onInput(e: Event) {
 
 /* Value text above knob */
 .value-text {
-  font-size: 0.875rem; /* text-sm */
+  font-size: 0.875rem;
   font-weight: 600;
   color: limegreen;
   text-align: center;
@@ -121,9 +121,9 @@ function onInput(e: Event) {
 
 /* Label text under knob */
 .label-text {
-  font-size: 0.75rem; /* text-xs to sm */
-  font-weight: 500;
-  color: limegreen;
+  font-size: 1.2rem;
+  font-weight: bold;
+  font-family: "Digital", monospace;
   text-align: center;
 }
 </style>

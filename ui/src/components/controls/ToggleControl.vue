@@ -82,20 +82,18 @@ function toggle() {
 
 /* Value text above toggle */
 .value-text {
-  font-size: 0.875rem;
+  font-size: 1.4rem;
   font-weight: 600;
-  color: limegreen;
+  font-family: "Digital", monospace;
   text-shadow: 0 0 2px black, 0 0 2px black;
   text-align: center;
 }
 
 /* Label text under toggle */
 .label-text {
-  width: 50px;
-  height: 30px;
-  font-size: 0.75rem;
+  font-size: 1.2rem;
   font-weight: 500;
-  color: limegreen;
+  font-family: "Digital", monospace;
   text-align: center;
 }
 </style>

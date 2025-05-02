@@ -27,9 +27,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "Hi-Cut Frequency",
                                                                500.0f, 16000.0f, 9800.0f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.5f, 0.25f));
+            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.4f, 0.2f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 5.0f, 1.5f));
+            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 4.0f, 2.0f));
         params.push_back(std::make_unique<AudioParameterBool>("sync", "Tempo Sync", false));
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
             "division", "Note Division",

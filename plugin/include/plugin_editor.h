@@ -37,8 +37,14 @@ private:
 
   juce::WebSliderRelay delayTimeRelay{"delayTime"};
   juce::WebSliderRelay feedbackRelay{"feedback"};
-  juce::WebSliderRelay wetRelay{"wet"};
-  juce::WebSliderRelay dryRelay{"dry"};
+  juce::WebSliderRelay wetRelay{"wetLevel"};
+  juce::WebSliderRelay dryRelay{"dryLevel"};
+  juce::WebSliderRelay modDepthRelay{"modDepth"};
+  juce::WebSliderRelay modRateRelay{"modRate"};
+  juce::WebToggleButtonRelay sync{"sync"};
+  juce::WebComboBoxRelay divisionRelay{"division"};
+  juce::WebComboBoxRelay modeRelay{"mode"};
+  juce::WebSliderRelay hiCutFreqRelay{"hiCutFreq"};
 
   juce::WebSliderParameterAttachment delayTimeWebAttachment{
       *processorRef.parameters.getParameter("delayTime"), delayTimeRelay, nullptr};
@@ -48,6 +54,18 @@ private:
                                                       wetRelay, nullptr};
   juce::WebSliderParameterAttachment dryWebAttachment{*processorRef.parameters.getParameter("dry"),
                                                       dryRelay, nullptr};
+  juce::WebSliderParameterAttachment modDepthWebAttachment{
+      *processorRef.parameters.getParameter("modDepth"), modDepthRelay, nullptr};
+  juce::WebSliderParameterAttachment modRateWebAttachment{
+      *processorRef.parameters.getParameter("modRate"), modRateRelay, nullptr};
+  juce::WebToggleButtonParameterAttachment syncWebAttachment{
+      *processorRef.parameters.getParameter("sync"), sync, nullptr};
+  juce::WebComboBoxParameterAttachment divisionWebAttachment{
+      *processorRef.parameters.getParameter("division"), divisionRelay, nullptr};
+  juce::WebComboBoxParameterAttachment modeWebAttachment{
+      *processorRef.parameters.getParameter("mode"), modeRelay, nullptr};
+  juce::WebSliderParameterAttachment hiCutWebAttachment{
+      *processorRef.parameters.getParameter("hiCutFreq"), hiCutFreqRelay, nullptr};
 
   std::optional<juce::WebBrowserComponent::Resource> getResource(const juce::String& url);
   juce::String getMimeForExtension(const juce::String& extension);
@@ -55,6 +73,11 @@ private:
   //==============================================================================
   // Native JUCE UI
   //==============================================================================
+  // Hi-cut filter
+  juce::Label hiCutFreqLabel;
+  juce::Slider hiCutFreqSlider;
+  std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> hiCutFreqAttachment;
+
   // Delay parameters
   juce::Label delayTimeLabel, feedbackLabel, wetLabel, dryLabel;
   juce::Slider delayTimeSlider, feedbackSlider, wetSlider, drySlider;

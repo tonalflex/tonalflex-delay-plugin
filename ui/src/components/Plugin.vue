@@ -8,12 +8,14 @@
       </div>
       <div class="parameter">
         <div>
-          <SevenSegmentDisplay :value="Math.round(wetLevel * 100)" />
+          <SevenSegmentDisplay
+            :value="Math.round(500 + hiCutFreq * (16000 - 500))"
+          />
           <span class="display-text">hz</span>
         </div>
         <SliderControl
           label="Hi Cut"
-          v-model="hiCut"
+          v-model="hiCutFreq"
           :knob-image="knobWhite"
           :frames="79"
         />
@@ -119,7 +121,7 @@ import knobBlue from "@/assets/knob_njd_blue.png?inline";
 import { SevenSegmentDisplay } from "vue3-seven-segment-display";
 
 // Plugin Parameters
-const hiCut = useParameter("hiCut", "slider");
+const hiCutFreq = useParameter("hiCutFreq", "slider");
 const delayTime = useParameter("delayTime", "slider");
 const feedback = useParameter("feedback", "slider");
 const wetLevel = useParameter("wetLevel", "slider");

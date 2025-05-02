@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <juce_audio_processors/juce_audio_processors.h>
-
+#include <juce_dsp/juce_dsp.h>
 class Delay {
 public:
   enum class DelayMode { Mono, Stereo, PingPong };
@@ -12,6 +12,8 @@ public:
     float feedback = 0.5f;
     float wetLevel = 0.5f;
     float dryLevel = 0.5f;
+
+    float hiCutFreq = 0.0f;  // in Hz
 
     float modulationDepthSeconds = 0.002f;
     float modulationRateHz = 0.25f;
@@ -34,14 +36,16 @@ public:
 private:
   double sampleRate;
   const double maxDelayTime;
-  float delayTimeSeconds;
 
+  float delayTimeSeconds;
   float feedback;
   float wetLevel;
   float dryLevel;
 
-  bool pingPongFlip = false;
-  size_t samplesUntilNextFlip = 1;
+  float hiCutFreq;
+  juce::dsp::IIR::Filter<float> hiCutFilterL;
+  juce::dsp::IIR::Filter<float> hiCutFilterR;
+  juce::dsp::IIR::Coefficients<float>::Ptr hiCutCoefficients;
 
   float modDepth;
   float modRate;
@@ -49,6 +53,9 @@ private:
 
   float fadeInAmount = 0.0f;
   float fadeInIncrement = 0.0f;
+
+  bool pingPongFlip = false;
+  size_t samplesUntilNextFlip = 1;
 
   DelayMode mode;
 

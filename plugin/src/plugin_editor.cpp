@@ -31,10 +31,16 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
           .withOptionsFrom(controlParameterIndexReceiver)
 
           // Bind parameter relays for two-way communication (C++ <=> JS)
+          .withOptionsFrom(hiCutFreqRelay)
           .withOptionsFrom(delayTimeRelay)
           .withOptionsFrom(feedbackRelay)
           .withOptionsFrom(wetRelay)
           .withOptionsFrom(dryRelay)
+          .withOptionsFrom(modDepthRelay)
+          .withOptionsFrom(modRateRelay)
+          .withOptionsFrom(sync)
+          .withOptionsFrom(divisionRelay)
+          .withOptionsFrom(modeRelay)
 
           // Example: register a JUCE C++ function callable from JS for debugging/testing
           .withNativeFunction(
@@ -50,18 +56,30 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
           // Inject debug message into browser console on load
           .withUserScript(R"(console.log("JUCE C++ Backend is running!");)"));
 
-  // Set size of desktop plugin window (pixels)
-  setSize(600, 600);
-
   // Ensure WebView is added after full construction (avoids timing issues)
   juce::MessageManager::callAsync([this]() {
     addAndMakeVisible(*webView);
     webView->goToURL(juce::WebBrowserComponent::getResourceProviderRoot() + "index.html");
+    // webView->goToURL("http://localhost:5173/");
   });
+
+  // Set size of desktop plugin window (pixels)
+  setSize(700, 800);
 
   /**
    * Initialize Native JUCE UI (for development and demo purposes)
    */
+  addAndMakeVisible(hiCutFreqLabel);
+  hiCutFreqLabel.setText("Hi Cut Freq", juce::dontSendNotification);
+  hiCutFreqLabel.setJustificationType(juce::Justification::centred);
+  addAndMakeVisible(hiCutFreqSlider);
+  hiCutFreqSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  hiCutFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  hiCutFreqSlider.setRange(2000.0f, 20000.0f, 100.0f);
+  hiCutFreqSlider.setValue(20000.0f);
+  hiCutFreqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+      processorRef.getParameters(), "hiCutFreq", hiCutFreqSlider);
+
   addAndMakeVisible(delayTimeLabel);
   delayTimeLabel.setText("Delay Time", juce::dontSendNotification);
   delayTimeLabel.setJustificationType(juce::Justification::centred);
@@ -164,6 +182,9 @@ void AudioPluginAudioProcessorEditor::resized() {
 
   auto sliderHeight = 50;
 
+  hiCutFreqLabel.setBounds(leftPanel.removeFromTop(20));
+  hiCutFreqSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+
   delayTimeLabel.setBounds(leftPanel.removeFromTop(20));
   delayTimeSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
 
@@ -190,7 +211,8 @@ void AudioPluginAudioProcessorEditor::resized() {
   modeLabel.setBounds(leftPanel.removeFromTop(20));
   modeBox.setBounds(leftPanel.removeFromTop(30));
 
-  webView->setBounds(bounds);  // Set web view bounds to the right half
+  if (webView)
+    webView->setBounds(bounds);  // Set web view bounds to the right half
 }
 
 // Get the WebView UI resources from BinaryData

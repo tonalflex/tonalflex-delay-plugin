@@ -19,15 +19,17 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         std::vector<std::unique_ptr<RangedAudioParameter>> params;
 
         params.push_back(
-            std::make_unique<AudioParameterFloat>("delayTime", "Delay Time", 0.01f, 2.0f, 0.3f));
+            std::make_unique<AudioParameterFloat>("delayTime", "Delay Time", 0.01f, 2.0f, 0.33f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.0f, 0.99f, 0.2f));
-        params.push_back(std::make_unique<AudioParameterFloat>("wet", "Wet", 0.0f, 1.0f, 0.10f));
+            std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.0f, 0.99f, 0.26f));
+        params.push_back(std::make_unique<AudioParameterFloat>("wet", "Wet", 0.0f, 1.0f, 0.11f));
         params.push_back(std::make_unique<AudioParameterFloat>("dry", "Dry", 0.0f, 1.0f, 1.0f));
+        params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "Hi-Cut Frequency",
+                                                               500.0f, 16000.0f, 9800.0f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.5f, 0.2f));
+            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.5f, 0.25f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 5.0f, 1.2f));
+            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 5.0f, 1.5f));
         params.push_back(std::make_unique<AudioParameterBool>("sync", "Tempo Sync", false));
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
             "division", "Note Division",
@@ -114,6 +116,7 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   p.feedback = *parameters.getRawParameterValue("feedback");
   p.wetLevel = *parameters.getRawParameterValue("wet");
   p.dryLevel = *parameters.getRawParameterValue("dry");
+  p.hiCutFreq = *parameters.getRawParameterValue("hiCutFreq");
   p.modulationDepthSeconds = *parameters.getRawParameterValue("modDepth");
   p.modulationRateHz = *parameters.getRawParameterValue("modRate");
   p.syncToTempo = *parameters.getRawParameterValue("sync") > 0.5f;

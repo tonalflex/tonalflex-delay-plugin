@@ -33,6 +33,17 @@ void Delay::setParameters(const Parameters& params) {
     delayTimeSeconds = newDelayTime;
     samplesUntilNextFlip = static_cast<size_t>(delayTimeSeconds * sampleRate);
   }
+
+  // Update hi-cut filter frequency if changed
+  if (std::abs(hiCutFreq - params.hiCutFreq) > 1.0f && params.hiCutFreq > 20.0f &&
+      params.hiCutFreq < sampleRate * 0.5f) {
+    hiCutFreq = params.hiCutFreq;
+
+    hiCutFilterL.coefficients =
+        juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, hiCutFreq);
+    hiCutFilterR.coefficients =
+        juce::dsp::IIR::Coefficients<float>::makeLowPass(sampleRate, hiCutFreq);
+  }
 }
 
 void Delay::processMono(float* samples, int numSamples) {
@@ -44,12 +55,12 @@ void Delay::processMono(float* samples, int numSamples) {
     size_t readIndex = (writeIndex + buf.size() - delaySamples) % buf.size();
 
     float delayed = buf[readIndex];
+    float filtered = hiCutFilterL.processSample(delayed);
     float input = samples[i];
-    float wet = delayed;
-    float output = dryLevel * input + wetLevel * wet;
+    float output = dryLevel * input + wetLevel * filtered;
 
     samples[i] = output;
-    buf[writeIndex] = input + delayed * feedback;
+    buf[writeIndex] = input + filtered * feedback;
 
     writeIndex = (writeIndex + 1) % buf.size();
     modPhase = std::fmod(modPhase + modRate / static_cast<float>(sampleRate), 1.0f);
@@ -78,6 +89,9 @@ void Delay::processStereo(float* left, float* right, int numSamples) {
     float delayedL = bufL[i0] * (1.0f - frac) + bufL[i1] * frac;
     float delayedR = bufR[i0] * (1.0f - frac) + bufR[i1] * frac;
 
+    float filteredL = hiCutFilterL.processSample(delayedL);
+    float filteredR = hiCutFilterR.processSample(delayedR);
+
     float inL = left[i];
     float inR = right[i];
 
@@ -86,8 +100,8 @@ void Delay::processStereo(float* left, float* right, int numSamples) {
     fadeInAmount += fadeInIncrement;
 
     if (mode == DelayMode::PingPong) {
-      left[i] = dryLevel * inL + wetLevel * delayedL * fadeFactor;
-      right[i] = dryLevel * inR + wetLevel * delayedR * fadeFactor;
+      left[i] = dryLevel * inL + wetLevel * filteredL * fadeFactor;
+      right[i] = dryLevel * inR + wetLevel * filteredR * fadeFactor;
 
       // Inject input from one channel to start the ping-pong chain
       bufL[writeIndex] = inL * (1.0f - feedback);
@@ -106,8 +120,8 @@ void Delay::processStereo(float* left, float* right, int numSamples) {
         samplesUntilNextFlip = static_cast<size_t>(delaySamples);
       }
     } else {
-      left[i] = dryLevel * inL + wetLevel * delayedL * fadeFactor;
-      right[i] = dryLevel * inR + wetLevel * delayedR * fadeFactor;
+      left[i] = dryLevel * inL + wetLevel * filteredL * fadeFactor;
+      right[i] = dryLevel * inR + wetLevel * filteredR * fadeFactor;
 
       bufL[writeIndex] = inL + delayedL * feedback;
       bufR[writeIndex] = inR + delayedR * feedback;

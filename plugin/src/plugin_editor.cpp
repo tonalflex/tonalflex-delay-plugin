@@ -31,10 +31,16 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
           .withOptionsFrom(controlParameterIndexReceiver)
 
           // Bind parameter relays for two-way communication (C++ <=> JS)
-          .withOptionsFrom(roomSizeRelay)
-          .withOptionsFrom(dampingRelay)
-          .withOptionsFrom(wetLevelRelay)
-          .withOptionsFrom(dryLevelRelay)
+          .withOptionsFrom(hiCutFreqRelay)
+          .withOptionsFrom(delayTimeRelay)
+          .withOptionsFrom(feedbackRelay)
+          .withOptionsFrom(wetRelay)
+          .withOptionsFrom(dryRelay)
+          .withOptionsFrom(modDepthRelay)
+          .withOptionsFrom(modRateRelay)
+          .withOptionsFrom(sync)
+          .withOptionsFrom(divisionRelay)
+          .withOptionsFrom(modeRelay)
 
           // Example: register a JUCE C++ function callable from JS for debugging/testing
           .withNativeFunction(
@@ -50,61 +56,111 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
           // Inject debug message into browser console on load
           .withUserScript(R"(console.log("JUCE C++ Backend is running!");)"));
 
-  // Set size of desktop plugin window (pixels)
-  setSize(600, 600);
-
   // Ensure WebView is added after full construction (avoids timing issues)
   juce::MessageManager::callAsync([this]() {
     addAndMakeVisible(*webView);
     webView->goToURL(juce::WebBrowserComponent::getResourceProviderRoot() + "index.html");
+    // webView->goToURL("http://localhost:5173/");
   });
+
+  // Set size of desktop plugin window (pixels)
+  setSize(430, 830);
 
   /**
    * Initialize Native JUCE UI (for development and demo purposes)
-   *
-   * - This traditional JUCE-based GUI exists alongside the WebView UI.
-   * - Useful for testing parameter bindings or fallback scenarios.
-   * - This section is not required in production and can be removed or disabled.
    */
-  addAndMakeVisible(headlineLabel);
-  headlineLabel.setText("Template Plugin", juce::dontSendNotification);
-  headlineLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(hiCutFreqLabel);
+  // hiCutFreqLabel.setText("Hi Cut Freq", juce::dontSendNotification);
+  // hiCutFreqLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(hiCutFreqSlider);
+  // hiCutFreqSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // hiCutFreqSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // hiCutFreqSlider.setRange(2000.0f, 20000.0f, 100.0f);
+  // hiCutFreqSlider.setValue(20000.0f);
+  // hiCutFreqAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "hiCutFreq", hiCutFreqSlider);
 
-  addAndMakeVisible(roomSizeLabel);
-  roomSizeLabel.setText("Room Size", juce::dontSendNotification);
-  roomSizeLabel.setJustificationType(juce::Justification::centred);
-  addAndMakeVisible(roomSizeSlider);
-  roomSizeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  roomSizeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
-  roomSizeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-      processorRef.getParameters(), "roomSize", roomSizeSlider);
+  // addAndMakeVisible(delayTimeLabel);
+  // delayTimeLabel.setText("Delay Time", juce::dontSendNotification);
+  // delayTimeLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(delayTimeSlider);
+  // delayTimeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // delayTimeSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // delayTimeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "delayTime", delayTimeSlider);
 
-  addAndMakeVisible(dampingLabel);
-  dampingLabel.setText("Damping", juce::dontSendNotification);
-  dampingLabel.setJustificationType(juce::Justification::centred);
-  addAndMakeVisible(dampingSlider);
-  dampingSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  dampingSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
-  dampingAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-      processorRef.getParameters(), "damping", dampingSlider);
+  // addAndMakeVisible(feedbackLabel);
+  // feedbackLabel.setText("Feedback", juce::dontSendNotification);
+  // feedbackLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(feedbackSlider);
+  // feedbackSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // feedbackSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // feedbackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "feedback", feedbackSlider);
 
-  addAndMakeVisible(wetLevelLabel);
-  wetLevelLabel.setText("Wet Level", juce::dontSendNotification);
-  wetLevelLabel.setJustificationType(juce::Justification::centred);
-  addAndMakeVisible(wetLevelSlider);
-  wetLevelSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  wetLevelSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
-  wetLevelAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-      processorRef.getParameters(), "wetLevel", wetLevelSlider);
+  // addAndMakeVisible(wetLabel);
+  // wetLabel.setText("Wet Level", juce::dontSendNotification);
+  // wetLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(wetSlider);
+  // wetSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // wetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // wetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "wet", wetSlider);
 
-  addAndMakeVisible(dryLevelLabel);
-  dryLevelLabel.setText("Dry Level", juce::dontSendNotification);
-  dryLevelLabel.setJustificationType(juce::Justification::centred);
-  addAndMakeVisible(dryLevelSlider);
-  dryLevelSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  dryLevelSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
-  dryLevelAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-      processorRef.getParameters(), "dryLevel", dryLevelSlider);
+  // addAndMakeVisible(dryLabel);
+  // dryLabel.setText("Dry Level", juce::dontSendNotification);
+  // dryLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(drySlider);
+  // drySlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // drySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // dryAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "dry", drySlider);
+
+  // addAndMakeVisible(modDepthLabel);
+  // modDepthLabel.setText("Mod Depth", juce::dontSendNotification);
+  // modDepthLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(modDepthSlider);
+  // modDepthSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // modDepthSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // modDepthAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "modDepth", modDepthSlider);
+
+  // addAndMakeVisible(modRateLabel);
+  // modRateLabel.setText("Mod Rate", juce::dontSendNotification);
+  // modRateLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(modRateSlider);
+  // modRateSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+  // modRateSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
+  // modRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+  //     processorRef.getParameters(), "modRate", modRateSlider);
+
+  // addAndMakeVisible(syncToggle);
+  // syncToggle.setButtonText("Sync to Tempo");
+  // syncAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+  //     processorRef.getParameters(), "sync", syncToggle);
+
+  // addAndMakeVisible(divisionLabel);
+  // divisionLabel.setText("Note Division", juce::dontSendNotification);
+  // divisionLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(divisionBox);
+  // divisionBox.addItem("1/1", 1);         // 1.0
+  // divisionBox.addItem("1/2", 2);         // 0.5
+  // divisionBox.addItem("1/4", 3);         // 0.25
+  // divisionBox.addItem("1/8", 4);         // 0.125
+  // divisionBox.addItem("1/8 Dotted", 5);  // 0.1875
+  // divisionBox.addItem("1/16", 6);        // 0.0625
+  // divisionAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+  //     processorRef.getParameters(), "division", divisionBox);
+
+  // addAndMakeVisible(modeLabel);
+  // modeLabel.setText("Delay Mode", juce::dontSendNotification);
+  // modeLabel.setJustificationType(juce::Justification::centred);
+  // addAndMakeVisible(modeBox);
+  // modeBox.addItem("Mono", 1);
+  // modeBox.addItem("Stereo", 2);
+  // modeBox.addItem("PingPong", 3);
+  // modeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+  //     processorRef.getParameters(), "mode", modeBox);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor() {
@@ -114,33 +170,49 @@ AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor() {
 }
 
 void AudioPluginAudioProcessorEditor::paint(juce::Graphics& g) {
-  g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-  g.setColour(juce::Colours::white);
-  g.setFont(15.0f);
+  // g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+  // g.setColour(juce::Colours::white);
+  // g.setFont(15.0f);
 }
 
 void AudioPluginAudioProcessorEditor::resized() {
   auto bounds = getLocalBounds();
 
-  auto leftPanel = bounds.removeFromLeft(bounds.getWidth() / 2);
+  // auto leftPanel = bounds.removeFromLeft(bounds.getWidth() / 2);
 
-  auto headlineBounds = leftPanel.removeFromTop(40);
-  headlineLabel.setBounds(headlineBounds);
+  // auto sliderHeight = 50;
 
-  auto sliderHeight = 50;
-  roomSizeLabel.setBounds(leftPanel.removeFromTop(20));
-  roomSizeSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+  // hiCutFreqLabel.setBounds(leftPanel.removeFromTop(20));
+  // hiCutFreqSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
 
-  dampingLabel.setBounds(leftPanel.removeFromTop(20));
-  dampingSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+  // delayTimeLabel.setBounds(leftPanel.removeFromTop(20));
+  // delayTimeSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
 
-  wetLevelLabel.setBounds(leftPanel.removeFromTop(20));
-  wetLevelSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+  // feedbackLabel.setBounds(leftPanel.removeFromTop(20));
+  // feedbackSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
 
-  dryLevelLabel.setBounds(leftPanel.removeFromTop(20));
-  dryLevelSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+  // wetLabel.setBounds(leftPanel.removeFromTop(20));
+  // wetSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
 
-  webView->setBounds(bounds);  // Set web view bounds to the right half
+  // dryLabel.setBounds(leftPanel.removeFromTop(20));
+  // drySlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+
+  // modDepthLabel.setBounds(leftPanel.removeFromTop(20));
+  // modDepthSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+
+  // modRateLabel.setBounds(leftPanel.removeFromTop(20));
+  // modRateSlider.setBounds(leftPanel.removeFromTop(sliderHeight));
+
+  // syncToggle.setBounds(leftPanel.removeFromTop(30));
+
+  // divisionLabel.setBounds(leftPanel.removeFromTop(20));
+  // divisionBox.setBounds(leftPanel.removeFromTop(30));
+
+  // modeLabel.setBounds(leftPanel.removeFromTop(20));
+  // modeBox.setBounds(leftPanel.removeFromTop(30));
+
+  if (webView)
+    webView->setBounds(bounds);  // Set web view bounds to the right half
 }
 
 // Get the WebView UI resources from BinaryData

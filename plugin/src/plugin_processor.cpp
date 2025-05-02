@@ -4,9 +4,6 @@
 #include "plugin_editor.h"
 #endif
 
-// Small tolerance for floating-point comparisons
-constexpr float epsilon = 1e-5f;
-
 namespace audio_plugin {
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
@@ -18,11 +15,29 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
                          ),
       parameters(*this, nullptr, "PARAMETERS", [] {
-        return juce::AudioProcessorValueTreeState::ParameterLayout{
-            std::make_unique<juce::AudioParameterFloat>("roomSize", "Room Size", 0.0f, 1.0f, 0.5f),
-            std::make_unique<juce::AudioParameterFloat>("damping", "Damping", 0.0f, 1.0f, 0.3f),
-            std::make_unique<juce::AudioParameterFloat>("wetLevel", "Wet Level", 0.0f, 1.0f, 0.5f),
-            std::make_unique<juce::AudioParameterFloat>("dryLevel", "Dry Level", 0.0f, 1.0f, 0.8f)};
+        using namespace juce;
+        std::vector<std::unique_ptr<RangedAudioParameter>> params;
+
+        params.push_back(
+            std::make_unique<AudioParameterFloat>("delayTime", "Delay Time", 0.01f, 2.0f, 0.33f));
+        params.push_back(
+            std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.0f, 0.99f, 0.26f));
+        params.push_back(std::make_unique<AudioParameterFloat>("wet", "Wet", 0.0f, 1.0f, 0.11f));
+        params.push_back(std::make_unique<AudioParameterFloat>("dry", "Dry", 0.0f, 1.0f, 1.0f));
+        params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "Hi-Cut Frequency",
+                                                               500.0f, 16000.0f, 9800.0f));
+        params.push_back(
+            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.4f, 0.2f));
+        params.push_back(
+            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 4.0f, 2.0f));
+        params.push_back(std::make_unique<AudioParameterBool>("sync", "Tempo Sync", false));
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(
+            "division", "Note Division",
+            juce::StringArray{"1/1", "1/2", "1/4", "1/8", "1/8 Dotted", "1/16"}, 0));
+        params.push_back(std::make_unique<AudioParameterChoice>(
+            "mode", "Delay Mode", StringArray{"Mono", "Stereo", "PingPong"}, 1));
+
+        return juce::AudioProcessorValueTreeState::ParameterLayout{params.begin(), params.end()};
       }()) {
 }
 
@@ -68,14 +83,7 @@ void AudioPluginAudioProcessor::changeProgramName(int index, const juce::String&
 void AudioPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
   juce::ignoreUnused(samplesPerBlock);
 
-  // Initialize parameters
-  reverbParams.roomSize = *parameters.getRawParameterValue("roomSize");
-  reverbParams.damping = *parameters.getRawParameterValue("damping");
-  reverbParams.wetLevel = *parameters.getRawParameterValue("wetLevel");
-  reverbParams.dryLevel = *parameters.getRawParameterValue("dryLevel");
-
-  reverb.setParameters(reverbParams);
-  reverb.reset();
+  delay.setSampleRate(sampleRate);
 
   // Ignore build warnings for unused variables
   juce::ignoreUnused(sampleRate, samplesPerBlock);
@@ -103,42 +111,39 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   juce::ignoreUnused(midiMessages);
   juce::ScopedNoDenormals noDenormals;
 
-  auto totalNumInputChannels = getTotalNumInputChannels();
-  auto totalNumOutputChannels = getTotalNumOutputChannels();
-  auto numSamples = buffer.getNumSamples();
+  Delay::Parameters p;
+  p.delayTimeSeconds = *parameters.getRawParameterValue("delayTime");
+  p.feedback = *parameters.getRawParameterValue("feedback");
+  p.wetLevel = *parameters.getRawParameterValue("wet");
+  p.dryLevel = *parameters.getRawParameterValue("dry");
+  p.hiCutFreq = *parameters.getRawParameterValue("hiCutFreq");
+  p.modulationDepthSeconds = *parameters.getRawParameterValue("modDepth");
+  p.modulationRateHz = *parameters.getRawParameterValue("modRate");
+  p.syncToTempo = *parameters.getRawParameterValue("sync") > 0.5f;
 
-  // Clear unused output channels
-  for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-    buffer.clear(i, 0, numSamples);
+  static const std::array<float, 6> noteDurations = {1.0f, 0.5f, 0.25f, 0.125f, 0.1875f, 0.0625f};
+  int divisionIndex = static_cast<int>(*parameters.getRawParameterValue("division"));
+  p.noteDivision = noteDurations[divisionIndex];
 
-  // Update reverb parameters only if they change
-  if (std::abs(reverbParams.roomSize - *parameters.getRawParameterValue("roomSize")) > epsilon ||
-      std::abs(reverbParams.damping - *parameters.getRawParameterValue("damping")) > epsilon ||
-      std::abs(reverbParams.wetLevel - *parameters.getRawParameterValue("wetLevel")) > epsilon ||
-      std::abs(reverbParams.dryLevel - *parameters.getRawParameterValue("dryLevel")) > epsilon) {
-    reverbParams.roomSize = *parameters.getRawParameterValue("roomSize");
-    reverbParams.damping = *parameters.getRawParameterValue("damping");
-    reverbParams.wetLevel = *parameters.getRawParameterValue("wetLevel");
-    reverbParams.dryLevel = *parameters.getRawParameterValue("dryLevel");
-    reverb.setParameters(reverbParams);
-  }
+  p.hostBpm = getPlayHead()->getPosition()->getBpm().orFallback(120.0);
+  p.mode =
+      static_cast<Delay::DelayMode>(static_cast<int>(*parameters.getRawParameterValue("mode")));
 
-  // Auto-Detect Mono/Stereo input and process accordingly
-  if (totalNumInputChannels == 1 && totalNumOutputChannels >= 2) {
-    auto* monoChannel = buffer.getWritePointer(0);
+  delay.setParameters(p);
 
-    // Duplicate the mono channel into the second channel for stereo processing
-    auto* rightChannel = buffer.getWritePointer(1);
-    std::copy(monoChannel, monoChannel + numSamples, rightChannel);
+  auto* left = buffer.getWritePointer(0);
+  auto* right = buffer.getNumChannels() > 1 ? buffer.getWritePointer(1) : nullptr;
 
-    // Mono Input => Stereo Output
-    reverb.processStereo(monoChannel, rightChannel, numSamples);
-  } else if (totalNumInputChannels >= 2) {
-    // Stereo Input => Stereo Output
-    reverb.processStereo(buffer.getWritePointer(0), buffer.getWritePointer(1), numSamples);
-  } else if (totalNumInputChannels == 1 && totalNumOutputChannels == 1) {
-    // Mono Input => Mono Output
-    reverb.processMono(buffer.getWritePointer(0), numSamples);
+  if ((buffer.getNumChannels() == 1 || right == nullptr) && getTotalNumOutputChannels() == 1) {
+    // Mono to Mono
+    delay.processMono(left, buffer.getNumSamples());
+  } else if (buffer.getNumChannels() == 1 && getTotalNumOutputChannels() == 2) {
+    // Mono to Stereo
+    std::fill(right, right + buffer.getNumSamples(), 0.0f);  // clear to avoid doubling
+    delay.processStereo(left, right, buffer.getNumSamples());
+  } else {
+    // Stereo to Stereo
+    delay.processStereo(left, right, buffer.getNumSamples());
   }
 }
 

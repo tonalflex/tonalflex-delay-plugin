@@ -40,7 +40,9 @@ juce_add_plugin(${PROJECT_NAME}
 target_sources(${PROJECT_NAME}
     PRIVATE
         include/plugin_processor.h
+        include/delay.h
         src/plugin_processor.cpp
+        src/delay.cpp
 )
 # Include GUI for Desktop builds
 if (NOT HEADLESS)

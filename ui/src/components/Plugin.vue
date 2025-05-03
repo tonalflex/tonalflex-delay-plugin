@@ -68,7 +68,10 @@
 
     <div class="parameter-grid">
       <div class="parameter">
-        <div><SevenSegmentDisplay :value="Math.round(dryLevel * 100)" />%</div>
+        <div>
+          <SevenSegmentDisplay :value="Math.round(dryLevel * 100)" />
+          <span class="display-text">%</span>
+        </div>
         <SliderControl
           label="Dry Level"
           v-model="dryLevel"
@@ -77,7 +80,10 @@
         />
       </div>
       <div class="parameter">
-        <div><SevenSegmentDisplay :value="Math.round(wetLevel * 100)" />%</div>
+        <div>
+          <SevenSegmentDisplay :value="Math.round(wetLevel * 100)" />
+          <span class="display-text">%</span>
+        </div>
         <SliderControl
           label="Wet Level"
           v-model="wetLevel"
@@ -89,7 +95,10 @@
 
     <div class="parameter-grid">
       <div class="parameter">
-        <div><SevenSegmentDisplay :value="Math.round(modRate * 100)" />%</div>
+        <div>
+          <SevenSegmentDisplay :value="Math.round(modRate * 100)" />
+          <span class="display-text">%</span>
+        </div>
         <SliderControl
           label="Mod Rate"
           v-model="modRate"
@@ -98,7 +107,10 @@
         />
       </div>
       <div class="parameter">
-        <div><SevenSegmentDisplay :value="Math.round(modDepth * 100)" />%</div>
+        <div>
+          <SevenSegmentDisplay :value="Math.round(modDepth * 100)" />
+          <span class="display-text">%</span>
+        </div>
         <SliderControl
           label="Mod Depth"
           v-model="modDepth"

@@ -2,11 +2,5 @@
     "name": "Delay",
     "path": "delay.vst3",
     "system-plugin": "false",
-    "description": "TonalFlex Delay Plugin",
-    "parameters": {
-        "roomSize": "Room Size",
-        "damping": "Damping",
-        "wetLevel": "Wet Level",
-        "dryLevel": "Dry Level"
-    }
+    "description": "TonalFlex Delay Plugin"
 }

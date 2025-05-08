@@ -19,23 +19,23 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
         std::vector<std::unique_ptr<RangedAudioParameter>> params;
 
         params.push_back(
-            std::make_unique<AudioParameterFloat>("delayTime", "Delay Time", 0.01f, 2.0f, 0.33f));
+            std::make_unique<AudioParameterFloat>("delayTime", "delayTime", 0.01f, 2.0f, 0.33f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("feedback", "Feedback", 0.0f, 0.99f, 0.26f));
-        params.push_back(std::make_unique<AudioParameterFloat>("wet", "Wet", 0.0f, 1.0f, 0.11f));
-        params.push_back(std::make_unique<AudioParameterFloat>("dry", "Dry", 0.0f, 1.0f, 1.0f));
-        params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "Hi-Cut Frequency",
+            std::make_unique<AudioParameterFloat>("feedback", "feedback", 0.0f, 0.99f, 0.26f));
+        params.push_back(std::make_unique<AudioParameterFloat>("wet", "wet", 0.0f, 1.0f, 0.11f));
+        params.push_back(std::make_unique<AudioParameterFloat>("dry", "dry", 0.0f, 1.0f, 1.0f));
+        params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "hiCutFreq",
                                                                500.0f, 16000.0f, 9800.0f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modDepth", "Mod Depth", 0.0f, 0.4f, 0.2f));
+            std::make_unique<AudioParameterFloat>("modDepth", "modDepth", 0.0f, 0.4f, 0.2f));
         params.push_back(
-            std::make_unique<AudioParameterFloat>("modRate", "Mod Rate", 0.01f, 4.0f, 2.0f));
-        params.push_back(std::make_unique<AudioParameterBool>("sync", "Tempo Sync", false));
+            std::make_unique<AudioParameterFloat>("modRate", "modRate", 0.01f, 4.0f, 2.0f));
+        params.push_back(std::make_unique<AudioParameterBool>("sync", "sync", false));
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
-            "division", "Note Division",
+            "division", "division",
             juce::StringArray{"1/1", "1/2", "1/4", "1/8", "1/8 Dotted", "1/16"}, 0));
         params.push_back(std::make_unique<AudioParameterChoice>(
-            "mode", "Delay Mode", StringArray{"Mono", "Stereo", "PingPong"}, 1));
+            "mode", "mode", StringArray{"Mono", "Stereo", "PingPong"}, 1));
 
         return juce::AudioProcessorValueTreeState::ParameterLayout{params.begin(), params.end()};
       }()) {

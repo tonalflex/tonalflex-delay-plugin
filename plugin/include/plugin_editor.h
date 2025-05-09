@@ -50,9 +50,9 @@ private:
       *processorRef.parameters.getParameter("delayTime"), delayTimeRelay, nullptr};
   juce::WebSliderParameterAttachment feedbackWebAttachment{
       *processorRef.parameters.getParameter("feedback"), feedbackRelay, nullptr};
-  juce::WebSliderParameterAttachment wetWebAttachment{*processorRef.parameters.getParameter("wet"),
+  juce::WebSliderParameterAttachment wetWebAttachment{*processorRef.parameters.getParameter("wetLevel"),
                                                       wetRelay, nullptr};
-  juce::WebSliderParameterAttachment dryWebAttachment{*processorRef.parameters.getParameter("dry"),
+  juce::WebSliderParameterAttachment dryWebAttachment{*processorRef.parameters.getParameter("dryLevel"),
                                                       dryRelay, nullptr};
   juce::WebSliderParameterAttachment modDepthWebAttachment{
       *processorRef.parameters.getParameter("modDepth"), modDepthRelay, nullptr};

@@ -47,7 +47,7 @@ AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
 }
 
 const juce::String AudioPluginAudioProcessor::getName() const {
-  return "Tonalflex Delay";
+  return "Delay";
 }
 
 bool AudioPluginAudioProcessor::acceptsMidi() const {

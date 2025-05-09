@@ -105,7 +105,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
   // wetSlider.setSliderStyle(juce::Slider::LinearHorizontal);
   // wetSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
   // wetAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-  //     processorRef.getParameters(), "wet", wetSlider);
+  //     processorRef.getParameters(), "wetLevel", wetSlider);
 
   // addAndMakeVisible(dryLabel);
   // dryLabel.setText("Dry Level", juce::dontSendNotification);
@@ -114,7 +114,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
   // drySlider.setSliderStyle(juce::Slider::LinearHorizontal);
   // drySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 20);
   // dryAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-  //     processorRef.getParameters(), "dry", drySlider);
+  //     processorRef.getParameters(), "dryLevel", drySlider);
 
   // addAndMakeVisible(modDepthLabel);
   // modDepthLabel.setText("Mod Depth", juce::dontSendNotification);

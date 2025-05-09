@@ -22,8 +22,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
             std::make_unique<AudioParameterFloat>("delayTime", "delayTime", 0.01f, 2.0f, 0.33f));
         params.push_back(
             std::make_unique<AudioParameterFloat>("feedback", "feedback", 0.0f, 0.99f, 0.26f));
-        params.push_back(std::make_unique<AudioParameterFloat>("wet", "wet", 0.0f, 1.0f, 0.11f));
-        params.push_back(std::make_unique<AudioParameterFloat>("dry", "dry", 0.0f, 1.0f, 1.0f));
+        params.push_back(std::make_unique<AudioParameterFloat>("wetLevel", "wetLevel", 0.0f, 1.0f, 0.11f));
+        params.push_back(std::make_unique<AudioParameterFloat>("dryLevel", "dryLevel", 0.0f, 1.0f, 1.0f));
         params.push_back(std::make_unique<AudioParameterFloat>("hiCutFreq", "hiCutFreq",
                                                                500.0f, 16000.0f, 9800.0f));
         params.push_back(
@@ -114,8 +114,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   Delay::Parameters p;
   p.delayTimeSeconds = *parameters.getRawParameterValue("delayTime");
   p.feedback = *parameters.getRawParameterValue("feedback");
-  p.wetLevel = *parameters.getRawParameterValue("wet");
-  p.dryLevel = *parameters.getRawParameterValue("dry");
+  p.wetLevel = *parameters.getRawParameterValue("wetLevel");
+  p.dryLevel = *parameters.getRawParameterValue("dryLevel");
   p.hiCutFreq = *parameters.getRawParameterValue("hiCutFreq");
   p.modulationDepthSeconds = *parameters.getRawParameterValue("modDepth");
   p.modulationRateHz = *parameters.getRawParameterValue("modRate");

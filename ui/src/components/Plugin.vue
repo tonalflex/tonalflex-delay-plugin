@@ -159,8 +159,8 @@ const mode = useParameter("mode", "comboBox");
   flex-direction: column;
   gap: 0rem;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
+  height: 100%;
+  width:100%;
 }
 .parameter-grid {
   display: grid;
